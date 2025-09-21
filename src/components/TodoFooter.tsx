@@ -1,11 +1,12 @@
 import classNames from 'classnames';
 import React from 'react';
 import { Todo } from '../types/Todo';
+import { Filter } from '../App';
 
 type Props = {
   todos: Todo[];
-  filter: 'ALL' | 'ACTIVE' | 'COMPLETED';
-  onFilter: (type: 'ALL' | 'ACTIVE' | 'COMPLETED') => void;
+  filter: Filter;
+  onFilter: (type: Filter) => void;
   onClearCompletedTodos: () => void;
   activeTodos: number;
 };
@@ -27,10 +28,10 @@ export const TodoFooter: React.FC<Props> = ({
         <a
           href="#/"
           className={classNames('filter__link', {
-            ' selected': filter === 'ALL',
+            ' selected': filter === Filter.ALL,
           })}
           data-cy="FilterLinkAll"
-          onClick={() => onFilter('ALL')}
+          onClick={() => onFilter(Filter.ALL)}
         >
           All
         </a>
@@ -38,10 +39,10 @@ export const TodoFooter: React.FC<Props> = ({
         <a
           href="#/active"
           className={classNames('filter__link', {
-            ' selected': filter === 'ACTIVE',
+            ' selected': filter === Filter.ACTIVE,
           })}
           data-cy="FilterLinkActive"
-          onClick={() => onFilter('ACTIVE')}
+          onClick={() => onFilter(Filter.ACTIVE)}
         >
           Active
         </a>
@@ -49,10 +50,10 @@ export const TodoFooter: React.FC<Props> = ({
         <a
           href="#/completed"
           className={classNames('filter__link', {
-            ' selected': filter === 'COMPLETED',
+            ' selected': filter === Filter.COMPLETED,
           })}
           data-cy="FilterLinkCompleted"
-          onClick={() => onFilter('COMPLETED')}
+          onClick={() => onFilter(Filter.COMPLETED)}
         >
           Completed
         </a>

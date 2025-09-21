@@ -11,15 +11,21 @@ import { ErrorNotification } from './components/ErrorNotifications';
 
 const USER_ID = 3227;
 
+export enum Filter {
+  ALL = 'ALL',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+}
+
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
+  const [filter, setFilter] = useState<Filter>(Filter.ALL);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [deletingId, setDeletingId] = useState(0);
+  const [deletingId, setDeletingId] = useState<number[]>([]);
 
   useEffect(() => {
     getTodos()
@@ -37,22 +43,22 @@ export const App: React.FC = () => {
   }, []);
 
   const filteredTodos = todos.filter(todo => {
-    if (filter === 'ALL') {
+    if (filter === Filter.ALL) {
       return todo;
     }
 
-    if (filter === 'ACTIVE') {
+    if (filter === Filter.ACTIVE) {
       return !todo.completed;
     }
 
-    if (filter === 'COMPLETED') {
+    if (filter === Filter.COMPLETED) {
       return todo.completed;
     }
 
     return;
   });
 
-  const handleFilter = (type: 'ALL' | 'ACTIVE' | 'COMPLETED') => {
+  const handleFilter = (type: Filter) => {
     setFilter(type);
   };
 
@@ -150,23 +156,22 @@ export const App: React.FC = () => {
   };
 
   const handleDeleteTodo = (todoId: number) => {
-    setDeletingId(todoId);
+    setDeletingId(prev => [...prev, todoId]);
 
     deleteTodo(todoId)
-      .then(() =>
+      .then(() => {
         setTodos(currentTodos =>
           currentTodos.filter(todo => todo.id !== todoId),
-        ),
-      )
+        );
+      })
       .catch(() => {
         setError(true);
         setErrorMessage('Unable to delete a todo');
-        setTimeout(() => {
-          setError(false);
-        }, 3000);
-        setTodos(todos);
+        setTimeout(() => setError(false), 3000);
       })
-      .finally(() => setDeletingId(0));
+      .finally(() => {
+        setDeletingId(prev => prev.filter(id => id !== todoId));
+      });
   };
 
   const handleClearCompletedTodos = () => {
@@ -176,17 +181,22 @@ export const App: React.FC = () => {
       return;
     }
 
-    completedTodos.forEach(todo => {
-      deleteTodo(todo.id)
-        .then(() => {
-          setTodos(currentTodos => currentTodos.filter(t => t.id !== todo.id));
-        })
-        .catch(() => {
-          setError(true);
-          setErrorMessage(`Unable to delete a todo`);
-          setTimeout(() => setError(false), 3000);
-        });
-    });
+    const ids = completedTodos.map(t => t.id);
+
+    setDeletingId(prev => [...prev, ...ids]);
+
+    Promise.all(completedTodos.map(todo => deleteTodo(todo.id)))
+      .then(() => {
+        setTodos(currentTodos => currentTodos.filter(todo => !todo.completed));
+      })
+      .catch(() => {
+        setError(true);
+        setErrorMessage('Unable to delete completed todos');
+        setTimeout(() => setError(false), 3000);
+      })
+      .finally(() => {
+        setDeletingId(prev => prev.filter(id => !ids.includes(id)));
+      });
   };
 
   if (!USER_ID) {
