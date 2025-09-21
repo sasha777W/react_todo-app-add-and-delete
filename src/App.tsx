@@ -191,7 +191,7 @@ export const App: React.FC = () => {
       })
       .catch(() => {
         setError(true);
-        setErrorMessage('Unable to delete completed todos');
+        setErrorMessage('Unable to delete a todo');
         setTimeout(() => setError(false), 3000);
       })
       .finally(() => {
