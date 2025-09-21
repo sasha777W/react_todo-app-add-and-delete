@@ -181,22 +181,30 @@ export const App: React.FC = () => {
       return;
     }
 
-    const ids = completedTodos.map(t => t.id);
+    Promise.allSettled(
+      completedTodos.map(todo => deleteTodo(todo.id).then(() => todo.id)),
+    ).then(results => {
+      const successfulIds: number[] = [];
+      let hasError = false;
 
-    setDeletingId(prev => [...prev, ...ids]);
+      results.forEach(result => {
+        if (result.status === 'fulfilled') {
+          successfulIds.push(result.value);
+        } else {
+          hasError = true;
+        }
+      });
 
-    Promise.all(completedTodos.map(todo => deleteTodo(todo.id)))
-      .then(() => {
-        setTodos(currentTodos => currentTodos.filter(todo => !todo.completed));
-      })
-      .catch(() => {
+      setTodos(currentTodos =>
+        currentTodos.filter(todo => !successfulIds.includes(todo.id)),
+      );
+
+      if (hasError) {
         setError(true);
         setErrorMessage('Unable to delete a todo');
         setTimeout(() => setError(false), 3000);
-      })
-      .finally(() => {
-        setDeletingId(prev => prev.filter(id => !ids.includes(id)));
-      });
+      }
+    });
   };
 
   if (!USER_ID) {
