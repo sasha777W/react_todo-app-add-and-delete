@@ -181,6 +181,8 @@ export const App: React.FC = () => {
       return;
     }
 
+    setDeletingId(current => [...current, ...completedTodos.map(t => t.id)]);
+
     Promise.allSettled(
       completedTodos.map(todo => deleteTodo(todo.id).then(() => todo.id)),
     ).then(results => {
@@ -204,6 +206,10 @@ export const App: React.FC = () => {
         setErrorMessage('Unable to delete a todo');
         setTimeout(() => setError(false), 3000);
       }
+
+      setDeletingId(current =>
+        current.filter(id => !completedTodos.map(t => t.id).includes(id)),
+      );
     });
   };
 
