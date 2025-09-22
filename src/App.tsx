@@ -130,7 +130,15 @@ export const App: React.FC = () => {
       });
   };
 
-  const handleSubmitChangeTodo = (updatedTodo: Todo) => {
+  const handleSubmitChangeTodo = (updatedTodo: Todo): Promise<Todo> => {
+    if (updatedTodo.title.trim().length === 0) {
+      setTodos(currentTodos =>
+        currentTodos.filter(todo => todo.id !== updatedTodo.id),
+      );
+
+      return Promise.resolve(updatedTodo);
+    }
+
     return changeTodo(updatedTodo)
       .then(newTodo => {
         setTodos(currentTodos => {
@@ -147,9 +155,7 @@ export const App: React.FC = () => {
       .catch(() => {
         setError(true);
         setErrorMessage('Unable to update a todo');
-        setTimeout(() => {
-          setError(false);
-        }, 3000);
+        setTimeout(() => setError(false), 3000);
         setTodos(todos);
         throw new Error('Unable to update a todo');
       });
